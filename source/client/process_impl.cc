@@ -141,10 +141,11 @@ const std::vector<ClientWorkerPtr>& ProcessImpl::createWorkers(const uint32_t co
   while (workers_.size() < concurrency) {
     const auto worker_delay = std::chrono::duration_cast<std::chrono::nanoseconds>(
         ((inter_worker_delay_usec * worker_number) * 1us));
-    workers_.push_back(std::make_unique<ClientWorkerImpl>(
+    auto worker = std::make_unique<ClientWorkerImpl>(
         *api_, tls_, cluster_manager_, benchmark_client_factory_, sequencer_factory_,
         header_generator_factory_, store_root_, worker_number, first_worker_start + worker_delay,
-        http_tracer_, prefetch_connections));
+        http_tracer_, prefetch_connections);
+    workers_.push_back(std::move(worker));
     worker_number++;
   }
   return workers_;
@@ -334,6 +335,7 @@ bool ProcessImpl::run(OutputCollector& collector) {
     return false;
   }
   int number_of_workers = determineConcurrency();
+  ENVOY_LOG(info, "number_of_workers:{}", number_of_workers);
   shutdown_ = false;
   const std::vector<ClientWorkerPtr>& workers =
       createWorkers(number_of_workers, options_.prefetchConnections());

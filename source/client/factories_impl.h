@@ -4,6 +4,7 @@
 #include "envoy/event/dispatcher.h"
 #include "envoy/stats/store.h"
 #include "envoy/upstream/cluster_manager.h"
+#include "external/envoy/source/common/common/logger.h"
 
 #include "nighthawk/client/factories.h"
 #include "nighthawk/common/uri.h"
@@ -23,7 +24,7 @@ protected:
   const PlatformUtilImpl platform_util_;
 };
 
-class BenchmarkClientFactoryImpl : public OptionBasedFactoryImpl, public BenchmarkClientFactory {
+class BenchmarkClientFactoryImpl : public OptionBasedFactoryImpl, public BenchmarkClientFactory, public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
 public:
   BenchmarkClientFactoryImpl(const Options& options);
   BenchmarkClientPtr create(Envoy::Api::Api& api, Envoy::Event::Dispatcher& dispatcher,
@@ -34,7 +35,7 @@ public:
                             HeaderSource& header_generator) const override;
 };
 
-class SequencerFactoryImpl : public OptionBasedFactoryImpl, public SequencerFactory {
+class SequencerFactoryImpl : public OptionBasedFactoryImpl, public SequencerFactory, public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
 public:
   SequencerFactoryImpl(const Options& options);
   SequencerPtr create(Envoy::TimeSource& time_source, Envoy::Event::Dispatcher& dispatcher,

@@ -100,6 +100,12 @@ public:
 
   void prefetchPoolConnections() override;
 
+  void setWorkerNum(int num) override {
+    //ENVOY_LOG(info, "set worker number to BenchmarkClient, number: {}", num);
+    worker_num_ = num;
+    req_seq_num_ = worker_num_ * 1000;
+  }
+
 private:
   Envoy::Api::Api& api_;
   Envoy::Event::Dispatcher& dispatcher_;
@@ -124,6 +130,9 @@ private:
   Envoy::Tracing::HttpTracerPtr& http_tracer_;
   std::string cluster_name_;
   const HeaderGenerator header_generator_;
+  std::shared_ptr<Envoy::Http::HeaderMap> mutable_headers_;
+  int worker_num_;
+  uint32_t req_seq_num_;
 };
 
 } // namespace Client

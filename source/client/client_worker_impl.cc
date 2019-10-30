@@ -29,10 +29,11 @@ ClientWorkerImpl::ClientWorkerImpl(Envoy::Api::Api& api, Envoy::ThreadLocal::Ins
       prefetch_connections_(prefetch_connections) {}
 
 void ClientWorkerImpl::simpleWarmup() {
-  ENVOY_LOG(debug, "> worker {}: warmup start.", worker_number_);
+  ENVOY_LOG(info, "> worker {}: warmup start. thread: {}", worker_number_, std::this_thread::get_id());
   if (prefetch_connections_) {
     benchmark_client_->prefetchPoolConnections();
   }
+  ENVOY_LOG(info, "calling benchmark_client.tryStartRequest in ClientWorkerImpl::simpleWarmup, thread: {}", std::this_thread::get_id());
   if (benchmark_client_->tryStartRequest([this](bool, bool) { dispatcher_->exit(); })) {
     dispatcher_->run(Envoy::Event::Dispatcher::RunType::RunUntilExit);
   } else {
@@ -42,6 +43,7 @@ void ClientWorkerImpl::simpleWarmup() {
 }
 
 void ClientWorkerImpl::work() {
+  benchmark_client_->setWorkerNum(worker_number_);
   simpleWarmup();
   benchmark_client_->setMeasureLatencies(true);
   sequencer_->start();
@@ -53,6 +55,7 @@ void ClientWorkerImpl::work() {
   for (const auto& stat : store_.counters()) {
     // First, we strip the cluster prefix
     std::string stat_name = std::string(absl::StripPrefix(stat->name(), "cluster."));
+    //ENVOY_LOG(info, "stat_name: {}", stat_name);
     // Second, we strip our own prefix if it's there, else we skip.
     const std::string worker_prefix = fmt::format("worker.{}.", worker_number_);
     if (stat->value() && absl::StartsWith(stat_name, worker_prefix)) {

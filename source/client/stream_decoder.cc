@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include "common/common/dump_state_utils.h"
 #include "external/envoy/source/common/http/http1/codec_impl.h"
 #include "external/envoy/source/common/http/utility.h"
 #include "external/envoy/source/common/stream_info/stream_info_impl.h"
@@ -16,6 +17,8 @@ void StreamDecoder::decodeHeaders(Envoy::Http::HeaderMapPtr&& headers, bool end_
   response_headers_ = std::move(headers);
   const uint64_t response_code = Envoy::Http::Utility::getResponseStatus(*response_headers_);
   stream_info_.response_code_ = static_cast<uint32_t>(response_code);
+
+  //ENVOY_LOG(info, "decodeHeaders, stream_info_.response_code_: {}", stream_info_.response_code_.has_value() ? absl::StrCat(stream_info_.response_code_.value()) : "null");
   if (complete_) {
     onComplete(true);
   }

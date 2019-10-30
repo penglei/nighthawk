@@ -268,8 +268,8 @@ OptionsImpl::OptionsImpl(const nighthawk::client::CommandLineOptions& options) {
   setNonTrivialDefaults();
 
   for (const auto& header : options.request_options().request_headers()) {
-    std::string header_string =
-        fmt::format("{}:{}", header.header().key(), header.header().value());
+    std::string header_string = fmt::format("{}:{}", header.header().key(), header.header().value());
+    std::cout << "header_string: " << header_string << std::endl;
     request_headers_.push_back(header_string);
   }
 

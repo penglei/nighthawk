@@ -1,7 +1,7 @@
 #include "client/benchmark_client_impl.h"
 
 #include "envoy/event/dispatcher.h"
-#include "envoy/thread_local/thread_local.h"
+//#include "envoy/thread_local/thread_local.h"
 
 #include "nighthawk/common/statistic.h"
 
@@ -39,6 +39,21 @@ BenchmarkClientHttpImpl::BenchmarkClientHttpImpl(
       benchmark_client_stats_({ALL_BENCHMARK_CLIENT_STATS(POOL_COUNTER(*scope_))}),
       cluster_manager_(cluster_manager), http_tracer_(http_tracer),
       cluster_name_(std::string(cluster_name)), header_generator_(std::move(header_generator)) {
+
+  auto header = header_generator_();
+
+  Envoy::Http::HeaderMapPtr mheader = std::make_unique<Envoy::Http::HeaderMapImpl>();
+  header->iterateReverse([](const Http::HeaderEntry& header, void * context) -> Http::HeaderMap::Iterate {
+    auto lower_case_key = Envoy::Http::LowerCaseString(std::string(header.key().getStringView()));
+    auto key = std::string(header.key().getStringView());
+    auto value = std::string(header.value().getStringView());
+    ENVOY_LOG(info, "copy header: {}: {}",  key, value);
+    auto h = static_cast<Envoy::Http::HeaderMapPtr*>(context);
+    (*h)->addCopy(lower_case_key, std::string(header.value().getStringView()));
+    return Http::HeaderMap::Iterate::Continue;
+  }, &mheader);
+  mutable_headers_ = std::move(mheader);
+
   connect_statistic_->setId("benchmark_http_client.queue_to_connect");
   response_statistic_->setId("benchmark_http_client.request_to_response");
 }
@@ -66,6 +81,13 @@ StatisticPtrMap BenchmarkClientHttpImpl::statistics() const {
   statistics[response_statistic_->id()] = response_statistic_.get();
   return statistics;
 };
+
+std::string thread_id() {
+    auto thread_id = std::this_thread::get_id();
+    std::stringstream ss;
+    ss << thread_id;
+    return ss.str();
+}
 
 bool BenchmarkClientHttpImpl::tryStartRequest(CompletionCallback caller_completion_callback) {
   // When we allow client-side queuing, we want to have a sense of time spend waiting on that queue.
@@ -97,12 +119,25 @@ bool BenchmarkClientHttpImpl::tryStartRequest(CompletionCallback caller_completi
     }
   }
 
+  Envoy::Http::LowerCaseString req_id_key(std::string("x-id"));
+  std::string seq_value = std::to_string(req_seq_num_);
+  mutable_headers_->remove(req_id_key);
+  mutable_headers_->addCopy(req_id_key, seq_value);
+  req_seq_num_ += 1;
+
+  Envoy::Http::LowerCaseString thread_id_hdr_key(std::string("x-thread"));
+  mutable_headers_->remove(thread_id_hdr_key);
+  mutable_headers_->addCopy(thread_id_hdr_key, thread_id());
+
+  std::shared_ptr<Envoy::Http::HeaderMap> mheader(mutable_headers_);
+
   std::string x_request_id = generator_.uuid();
   auto stream_decoder = new StreamDecoder(
       dispatcher_, api_.timeSource(), *this, std::move(caller_completion_callback),
-      *connect_statistic_, *response_statistic_, std::move(header), measureLatencies(),
+      *connect_statistic_, *response_statistic_, mheader, measureLatencies(),
       content_length, x_request_id, http_tracer_);
   requests_initiated_++;
+  //ENVOY_LOG(info, "add stream decoder to pool");
   pool_ptr->newStream(*stream_decoder, *stream_decoder);
   return true;
 }

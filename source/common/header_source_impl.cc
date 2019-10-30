@@ -13,7 +13,7 @@ StaticHeaderSourceImpl::StaticHeaderSourceImpl(Envoy::Http::HeaderMapPtr&& heade
 
 HeaderGenerator StaticHeaderSourceImpl::get() {
   return [this]() -> HeaderMapPtr {
-    while (yields_left_--) {
+    while (yields_left_-- > 0) {
       return header_;
     }
     return nullptr;

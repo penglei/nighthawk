@@ -12,6 +12,7 @@
 #include "nighthawk/common/operation_callback.h"
 #include "nighthawk/common/statistic.h"
 
+#include "external/envoy/source/common/common/logger.h"
 #include "external/envoy/source/common/http/header_map_impl.h"
 #include "external/envoy/source/common/runtime/uuid_util.h"
 #include "external/envoy/source/common/stream_info/stream_info_impl.h"
@@ -35,7 +36,8 @@ public:
 class StreamDecoder : public Envoy::Http::StreamDecoder,
                       public Envoy::Http::StreamCallbacks,
                       public Envoy::Http::ConnectionPool::Callbacks,
-                      public Envoy::Event::DeferredDeletable {
+                      public Envoy::Event::DeferredDeletable,
+                      public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
 public:
   StreamDecoder(Envoy::Event::Dispatcher& dispatcher, Envoy::TimeSource& time_source,
                 StreamDecoderCompletionCallback& decoder_completion_callback,

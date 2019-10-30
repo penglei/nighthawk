@@ -62,6 +62,8 @@ public:
    * @return bool indicating if latency measurement is enabled.
    */
   virtual bool measureLatencies() const PURE;
+
+  virtual void setWorkerNum(int num) PURE;
 };
 
 using BenchmarkClientPtr = std::unique_ptr<BenchmarkClient>;

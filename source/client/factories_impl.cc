@@ -28,11 +28,16 @@ BenchmarkClientPtr BenchmarkClientFactoryImpl::create(
     Envoy::Upstream::ClusterManagerPtr& cluster_manager, Envoy::Tracing::HttpTracerPtr& http_tracer,
     absl::string_view cluster_name, HeaderSource& header_generator) const {
   StatisticFactoryImpl statistic_factory(options_);
+
   auto benchmark_client = std::make_unique<BenchmarkClientHttpImpl>(
       api, dispatcher, scope, statistic_factory.create(), statistic_factory.create(), options_.h2(),
       cluster_manager, http_tracer, cluster_name, header_generator.get());
   auto request_options = options_.toCommandLineOptions()->request_options();
-  benchmark_client->setConnectionLimit(options_.connections());
+
+  auto connection_limit_opt = options_.connections();
+  ENVOY_LOG(info, "connection_limit_opt: {}, thread: {}", connection_limit_opt, std::this_thread::get_id());
+  benchmark_client->setConnectionLimit(connection_limit_opt);
+
   benchmark_client->setMaxPendingRequests(options_.maxPendingRequests());
   benchmark_client->setMaxActiveRequests(options_.maxActiveRequests());
   benchmark_client->setMaxRequestsPerConnection(options_.maxRequestsPerConnection());
@@ -46,6 +51,7 @@ SequencerPtr SequencerFactoryImpl::create(Envoy::TimeSource& time_source,
                                           Envoy::Event::Dispatcher& dispatcher,
                                           Envoy::MonotonicTime start_time,
                                           BenchmarkClient& benchmark_client) const {
+  ENVOY_LOG(info, "SequencerFactoryImpl::create");
   StatisticFactoryImpl statistic_factory(options_);
   RateLimiterPtr rate_limiter =
       std::make_unique<LinearRateLimiter>(time_source, Frequency(options_.requestsPerSecond()));
@@ -55,6 +61,7 @@ SequencerPtr SequencerFactoryImpl::create(Envoy::TimeSource& time_source,
     rate_limiter = std::make_unique<BurstingRateLimiter>(std::move(rate_limiter), burst_size);
   }
   SequencerTarget sequencer_target = [&benchmark_client](CompletionCallback f) -> bool {
+    //ENVOY_LOG(info, "calling benchmark_client.tryStartRequest in SequencerFactoryImpl::create, thread:{}", std::this_thread::get_id());
     return benchmark_client.tryStartRequest(std::move(f));
   };
   return std::make_unique<SequencerImpl>(

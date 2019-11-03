@@ -16,6 +16,6 @@ export BAZEL_COMPILER=clang
 
 #target="//:nighthawk"
 target="//:nighthawk_client"
-args="-c dbg"
+#args="-c dbg" #DEBUG macro symbol is conflict...
 args="-c opt"
 bazel build --verbose_failures --sandbox_debug $args $target

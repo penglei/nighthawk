@@ -5,7 +5,9 @@
 #include <thread>
 
 #include "nighthawk/common/platform_util.h"
-
+#if defined(__APPLE__)
+#define pthread_yield() pthread_yield_np()
+#endif
 namespace Nighthawk {
 
 using namespace std::chrono_literals;

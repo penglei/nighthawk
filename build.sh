@@ -5,17 +5,16 @@ set -ex
 #export CFLAGS="-Wno-error"
 #export CXXFLAGS="-Wno-error"
 
+#export ASAN_SYMBOLIZER_PATH=/opt/llvm/bin/llvm-symbolizer
 export CC=clang
 export CXX=clang++
-#export ASAN_SYMBOLIZER_PATH=/opt/llvm/bin/llvm-symbolizer
 export BAZEL_COMPILER=clang
 
-#export CC="gcc-8"
-#export CXX="g++-8"
-#--compiler=clang
-
-#target="//:nighthawk"
+#all_targets="//:nighthawk"
 target="//:nighthawk_client"
-#args="-c dbg" #DEBUG macro symbol is conflict...
-args="-c opt"
-bazel build --verbose_failures --sandbox_debug $args $target
+
+#bazel build -c dbg $target
+#bazel build -c opt $target
+
+#bazel build -c opt --copt -Os --config=sizeopt $target
+bazel build -c opt $target --config=sizeopt

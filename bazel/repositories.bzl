@@ -7,17 +7,17 @@ RULES_PYTHON_COMMIT = "fdbb17a4118a1728d19e638a5291b4c4266ea5b8"
 RULES_PYTHON_SHA = "9a3d71e348da504a9c4c5e8abd4cb822f7afb32c613dc6ee8b8535333a81a938"
 
 def nighthawk_dependencies():
-    http_archive(
-        name = "envoy",
-        sha256 = ENVOY_SHA,
-        strip_prefix = "envoy-%s" % ENVOY_COMMIT,
-        url = "https://github.com/envoyproxy/envoy/archive/%s.tar.gz" % ENVOY_COMMIT,
-    )
-
-    #native.local_repository(
-    #     name = "envoy",
-    #     path = "/data/workroom/envoy.git",
+    #http_archive(
+    #    name = "envoy",
+    #    sha256 = ENVOY_SHA,
+    #    strip_prefix = "envoy-%s" % ENVOY_COMMIT,
+    #    url = "https://github.com/envoyproxy/envoy/archive/%s.tar.gz" % ENVOY_COMMIT,
     #)
+
+    native.local_repository(
+         name = "envoy",
+         path = "/data/workroom/envoy.git",
+    )
 
     http_archive(
         name = "dep_hdrhistogram_c",

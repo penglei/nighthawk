@@ -43,7 +43,7 @@ void ClientWorkerImpl::simpleWarmup() {
 }
 
 void ClientWorkerImpl::work() {
-  benchmark_client_->setWorkerNum(worker_number_);
+  benchmark_client_->setWorkerNumAndTotalRequests(worker_number_, total_requests_);
   simpleWarmup();
   benchmark_client_->setMeasureLatencies(true);
   sequencer_->start();

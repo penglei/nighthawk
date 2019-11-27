@@ -135,6 +135,7 @@ const std::vector<ClientWorkerPtr>& ProcessImpl::createWorkers(const uint32_t co
   // global status quo, which we do not have right now. This has been noted in the
   // track-for-future issue.
   const auto first_worker_start = time_system_.monotonicTime() + kMinimalWorkerDelay;
+  const uint32_t total_requests = options_.requestsPerSecond() * options_.duration().count();
   const double inter_worker_delay_usec =
       (1. / options_.requestsPerSecond()) * 1000000 / concurrency;
   int worker_number = 0;
@@ -145,6 +146,7 @@ const std::vector<ClientWorkerPtr>& ProcessImpl::createWorkers(const uint32_t co
         *api_, tls_, cluster_manager_, benchmark_client_factory_, sequencer_factory_,
         header_generator_factory_, store_root_, worker_number, first_worker_start + worker_delay,
         http_tracer_, prefetch_connections);
+    worker->setTotalRequests(total_requests);
     workers_.push_back(std::move(worker));
     worker_number++;
   }

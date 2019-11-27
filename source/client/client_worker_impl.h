@@ -33,6 +33,9 @@ public:
     return thread_local_counter_values_;
   }
   void shutdownThread() override;
+  void setTotalRequests(uint32_t total_requests) {
+      total_requests_ = total_requests;
+  }
 
 protected:
   void work() override;
@@ -51,6 +54,7 @@ private:
   Envoy::LocalInfo::LocalInfoPtr local_info_;
   const bool prefetch_connections_;
   std::map<std::string, uint64_t> thread_local_counter_values_;
+  uint32_t total_requests_;
 };
 
 using ClientWorkerImplPtr = std::unique_ptr<ClientWorkerImpl>;

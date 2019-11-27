@@ -100,10 +100,10 @@ public:
 
   void prefetchPoolConnections() override;
 
-  void setWorkerNum(int num) override {
+  void setWorkerNumAndTotalRequests(int num, uint32_t total_requests) override {
     //ENVOY_LOG(info, "set worker number to BenchmarkClient, number: {}", num);
     worker_num_ = num;
-    req_seq_num_ = worker_num_ * 1000;
+    req_seq_num_ = worker_num_ * total_requests;
   }
 
 private:
@@ -131,6 +131,7 @@ private:
   std::string cluster_name_;
   const HeaderGenerator header_generator_;
   std::shared_ptr<Envoy::Http::HeaderMap> mutable_headers_;
+  std::string thread_id_;
   int worker_num_;
   uint32_t req_seq_num_;
 };

@@ -63,7 +63,7 @@ public:
    */
   virtual bool measureLatencies() const PURE;
 
-  virtual void setWorkerNum(int num) PURE;
+  virtual void setWorkerNumAndTotalRequests(int num, uint32_t total_requests) PURE;
 };
 
 using BenchmarkClientPtr = std::unique_ptr<BenchmarkClient>;

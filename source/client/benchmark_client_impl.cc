@@ -38,7 +38,7 @@ BenchmarkClientHttpImpl::BenchmarkClientHttpImpl(
       response_statistic_(std::move(response_statistic)), use_h2_(use_h2),
       benchmark_client_stats_({ALL_BENCHMARK_CLIENT_STATS(POOL_COUNTER(*scope_))}),
       cluster_manager_(cluster_manager), http_tracer_(http_tracer),
-      cluster_name_(std::string(cluster_name)), header_generator_(std::move(header_generator)) {
+      cluster_name_(std::string(cluster_name)), header_generator_(std::move(header_generator)), thread_id_("") {
 
   auto header = header_generator_();
 
@@ -124,10 +124,13 @@ bool BenchmarkClientHttpImpl::tryStartRequest(CompletionCallback caller_completi
   mutable_headers_->remove(req_id_key);
   mutable_headers_->addCopy(req_id_key, seq_value);
   req_seq_num_ += 1;
+  if (thread_id_.empty()) {
+      thread_id_ = thread_id();
+  }
 
   Envoy::Http::LowerCaseString thread_id_hdr_key(std::string("x-thread"));
   mutable_headers_->remove(thread_id_hdr_key);
-  mutable_headers_->addCopy(thread_id_hdr_key, thread_id());
+  mutable_headers_->addCopy(thread_id_hdr_key, thread_id_);
 
   std::shared_ptr<Envoy::Http::HeaderMap> mheader(mutable_headers_);
 

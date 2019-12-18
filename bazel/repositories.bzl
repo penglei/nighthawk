@@ -16,7 +16,9 @@ def nighthawk_dependencies():
 
     native.local_repository(
          name = "envoy",
-         path = "/data/workroom/envoy.git",
+         #path = "/penglei/Data/projects/envoy.git",
+         #path = "~/Data/projects/envoy.git",
+         path = "../envoy.git",
     )
 
     http_archive(
